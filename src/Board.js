@@ -3,8 +3,6 @@ import {Circle, Group, Line, Rect} from 'react-konva';
 
 import {game1} from './data';
 
-const CELL_SIZE = 100;
-
 const MyLine = ({points, color}) => {
   return (
     <Line
@@ -17,12 +15,12 @@ const MyLine = ({points, color}) => {
   );
 };
 
-const MyCircle = ({x, y, color}) => {
+const MyCircle = ({cellSize, x, y, color}) => {
   return (
     <Circle
-      x={x * CELL_SIZE + CELL_SIZE / 2}
-      y={y * CELL_SIZE + CELL_SIZE / 2}
-      radius={CELL_SIZE / 3}
+      x={x * cellSize + cellSize / 2}
+      y={y * cellSize + cellSize / 2}
+      radius={cellSize / 3}
       fill={color}
       strokeWidth={4}
     />
@@ -33,7 +31,8 @@ export default class Board extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      fixed: game1,
+      size: game1.size,
+      fixed: game1.colors,
       lines: {
         red: [0, 0, 0, 1, 1, 1]
       },
@@ -43,29 +42,32 @@ export default class Board extends Component {
   }
 
   render() {
+    const cellSize = this.props.windowSize / this.state.size;
+    const array = [...Array(this.state.size + 1).keys()];
+
     return (
       <Group>
-        <MyLine points={[0, 0,   500, 0]}   color="black" />
-        <MyLine points={[0, 100, 500, 100]} color="black" />
-        <MyLine points={[0, 200, 500, 200]} color="black" />
-        <MyLine points={[0, 300, 500, 300]} color="black" />
-        <MyLine points={[0, 400, 500, 400]} color="black" />
-        <MyLine points={[0, 500, 500, 500]} color="black" />
+        {array.map(idx =>
+          <MyLine
+            points={[0, idx * cellSize, this.props.windowSize, idx * cellSize]}
+            color="black"
+          />
+        )}
 
-        <MyLine points={[0,   0, 0,   500]} color="black" />
-        <MyLine points={[100, 0, 100, 500]} color="black" />
-        <MyLine points={[200, 0, 200, 500]} color="black" />
-        <MyLine points={[300, 0, 300, 500]} color="black" />
-        <MyLine points={[400, 0, 400, 500]} color="black" />
-        <MyLine points={[500, 0, 500, 500]} color="black" />
+        {array.map(idx =>
+          <MyLine
+            points={[idx * cellSize, 0, idx * cellSize, this.props.windowSize]}
+            color="black"
+          />
+        )}
 
-        {Object.keys(game1).map((color, idx) => {
-          const points = game1[color];
+        {Object.keys(this.state.fixed).map((color, idx) => {
+          const points = this.state.fixed[color];
 
           return (
             <Group key={idx}>
-              <MyCircle x={points[0]} y={points[1]} color={color} />
-              <MyCircle x={points[2]} y={points[3]} color={color} />
+              <MyCircle cellSize={cellSize} x={points[0]} y={points[1]} color={color} />
+              <MyCircle cellSize={cellSize} x={points[2]} y={points[3]} color={color} />
             </Group>
           );
         })}
@@ -75,7 +77,7 @@ export default class Board extends Component {
           return (
             <MyLine
               key={idx}
-              points={points.map(p => p * CELL_SIZE + CELL_SIZE / 2)}
+              points={points.map(p => p * cellSize + cellSize / 2)}
               color="red"
             />
           );
@@ -87,11 +89,13 @@ export default class Board extends Component {
   }
 
   componentDidMount() {
+    const cellSize = this.props.windowSize / this.state.size;
+
     this.bg.on('mousedown', e => {
       console.log('xxxxx')
 
-      const x = Math.floor(e.evt.x / CELL_SIZE);
-      const y = Math.floor(e.evt.y / CELL_SIZE);
+      const x = Math.floor(e.evt.x / cellSize);
+      const y = Math.floor(e.evt.y / cellSize);
       //const color = getColor(fixed, x, y);
       const color = 'red';
 
@@ -109,8 +113,8 @@ export default class Board extends Component {
         return;
       }
 
-      const x = Math.floor(e.evt.x / CELL_SIZE);
-      const y = Math.floor(e.evt.y / CELL_SIZE);
+      const x = Math.floor(e.evt.x / cellSize);
+      const y = Math.floor(e.evt.y / cellSize);
 
       const points = this.state.lines[color];
       const lastX = points[points.length - 2];
