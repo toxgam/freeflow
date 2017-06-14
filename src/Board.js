@@ -121,20 +121,25 @@ export default class Board extends Component {
     });
 
     this.bg.on('mousemove', e => {
-      const color = this.state.selectedColor;
-      if (!color) {
+      const selectedColor = this.state.selectedColor;
+      if (!selectedColor) {
         return;
       }
 
       const x = Math.floor(e.evt.x / cellSize);
       const y = Math.floor(e.evt.y / cellSize);
-
-      const lines = this.state.lines;
-      if (!lines[color]) {
-        lines[color] = [];
+      const color = getFixedColor(this.state.fixed, x, y);
+      if (color !== undefined && color !== selectedColor) {
+        this.setState({selectedColor: undefined});
+        return;
       }
 
-      const points = lines[color];
+      const lines = this.state.lines;
+      if (!lines[selectedColor]) {
+        lines[selectedColor] = [];
+      }
+
+      const points = lines[selectedColor];
       const lastX = points[points.length - 2];
       const lastY = points[points.length - 1];
       if (lastX === undefined || x === lastX || y === lastY) {
