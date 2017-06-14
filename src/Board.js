@@ -65,6 +65,45 @@ const rollBack = (lines, selectedColor, x, y) => {
   return selfRolledBack;
 };
 
+const isConnected = (fixed, lines) => {
+  const colors = Object.keys(fixed);
+  for (let i = 0; i < colors.length; i++) {
+    const color = colors[i];
+
+    const points = lines[color];
+    if (!points) {
+      return false;
+    }
+
+    const connected =
+      (
+        points[0] === fixed[color][0] &&
+        points[1] === fixed[color][1] &&
+        points[points.length - 2] === fixed[color][2] &&
+        points[points.length - 1] === fixed[color][3]
+      ) ||
+      (
+        points[points.length - 2] === fixed[color][0] &&
+        points[points.length - 1] === fixed[color][1] &&
+        points[0] === fixed[color][2] &&
+        points[1] === fixed[color][3]
+      );
+    if (!connected) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const areAllFilled = (size, lines) => {
+  const pointss = Object.values(lines);
+  const totalFilled = pointss.reduce(
+    (sum, points) => sum + points.length / 2,
+    0
+  );
+  return totalFilled === size * size;
+};
+
 export default class Board extends Component {
   constructor(props) {
     super(props);
@@ -196,6 +235,11 @@ export default class Board extends Component {
       if (lastX === undefined || x === lastX || y === lastY) {
         points.push(x, y);
         this.setState({lines});
+      }
+
+      if (isConnected(this.state.fixed, this.state.lines) &&
+          areAllFilled(this.state.size, this.state.lines)) {
+        console.log('Done');
       }
     });
   }
