@@ -168,79 +168,85 @@ export default class Board extends Component {
   }
 
   componentDidMount() {
+    this.bg.on('mousedown', this.onMouseDown.bind(this));
+    this.bg.on('mouseup',   this.onMouseUp.bind(this));
+    this.bg.on('mousemove', this.onMouseMove.bind(this));
+  }
+
+  onMouseDown(e) {
     const cellSize = this.props.windowSize / this.state.size;
 
-    this.bg.on('mousedown', e => {
-      const x = Math.floor(e.evt.x / cellSize);
-      const y = Math.floor(e.evt.y / cellSize);
+    const x = Math.floor(e.evt.x / cellSize);
+    const y = Math.floor(e.evt.y / cellSize);
 
-      const lines = this.state.lines;
-      const fixedColor = getFixedColor(this.state.fixed, x, y);
+    const lines = this.state.lines;
+    const fixedColor = getFixedColor(this.state.fixed, x, y);
 
-      if (fixedColor) {
-        delete lines[fixedColor];
-        this.setState({selectedColor: fixedColor, lines});
-      } else {
-        const colors = Object.keys(lines);
-        for (let i = 0; i < colors.length; i++) {
-          const color = colors[i];
-          const points = lines[color];
-          const idx = getPointIdx(points, x, y);
-          if (idx >= 0) {
-            lines[color] = points.slice(0, idx + 2);
-            this.setState({selectedColor: color, lines});
-            return;
-          }
+    if (fixedColor) {
+      delete lines[fixedColor];
+      this.setState({selectedColor: fixedColor, lines});
+    } else {
+      const colors = Object.keys(lines);
+      for (let i = 0; i < colors.length; i++) {
+        const color = colors[i];
+        const points = lines[color];
+        const idx = getPointIdx(points, x, y);
+        if (idx >= 0) {
+          lines[color] = points.slice(0, idx + 2);
+          this.setState({selectedColor: color, lines});
+          return;
         }
       }
-    });
+    }
+  }
 
-    this.bg.on('mouseup', e => {
+  onMouseUp(e) {
+    this.setState({selectedColor: undefined});
+  }
+
+  onMouseMove(e) {
+    const cellSize = this.props.windowSize / this.state.size;
+
+    const selectedColor = this.state.selectedColor;
+    if (!selectedColor) {
+      return;
+    }
+
+    const x = Math.floor(e.evt.x / cellSize);
+    const y = Math.floor(e.evt.y / cellSize);
+
+    // Stop at fixed point
+    const color = getFixedColor(this.state.fixed, x, y);
+    if (color !== undefined && color !== selectedColor) {
       this.setState({selectedColor: undefined});
-    });
+      return;
+    }
 
-    this.bg.on('mousemove', e => {
-      const selectedColor = this.state.selectedColor;
-      if (!selectedColor) {
-        return;
-      }
+    // Initialize
+    const lines = this.state.lines;
+    if (!lines[selectedColor]) {
+      lines[selectedColor] = [];
+    }
 
-      const x = Math.floor(e.evt.x / cellSize);
-      const y = Math.floor(e.evt.y / cellSize);
+    const points = lines[selectedColor];
 
-      // Stop at fixed point
-      const color = getFixedColor(this.state.fixed, x, y);
-      if (color !== undefined && color !== selectedColor) {
-        this.setState({selectedColor: undefined});
-        return;
-      }
+    // Roll back uncomplete route
+    if (rollBack(lines, selectedColor, x, y)) {
+      this.setState({lines});
+      return;
+    }
 
-      // Initialize
-      const lines = this.state.lines;
-      if (!lines[selectedColor]) {
-        lines[selectedColor] = [];
-      }
+    // Add points
+    const lastX = points[points.length - 2];
+    const lastY = points[points.length - 1];
+    if (lastX === undefined || x === lastX || y === lastY) {
+      points.push(x, y);
+      this.setState({lines});
+    }
 
-      const points = lines[selectedColor];
-
-      // Roll back uncomplete route
-      if (rollBack(lines, selectedColor, x, y)) {
-        this.setState({lines});
-        return;
-      }
-
-      // Add points
-      const lastX = points[points.length - 2];
-      const lastY = points[points.length - 1];
-      if (lastX === undefined || x === lastX || y === lastY) {
-        points.push(x, y);
-        this.setState({lines});
-      }
-
-      if (isConnected(this.state.fixed, this.state.lines) &&
-          areAllFilled(this.state.size, this.state.lines)) {
-        console.log('Done');
-      }
-    });
+    if (isConnected(this.state.fixed, this.state.lines) &&
+        areAllFilled(this.state.size, this.state.lines)) {
+      console.log('Done');
+    }
   }
 };
