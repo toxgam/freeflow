@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Circle, Group, Line} from 'react-konva';
+import {Circle, Group, Line, Rect} from 'react-konva';
 
 import {game1} from './data';
 
@@ -36,8 +36,10 @@ export default class Board extends Component {
       fixed: game1,
       lines: {
         red: [0, 0, 0, 1, 1, 1]
-      }
+      },
+      selectedColor: undefined
     }
+    this.bg = undefined;
   }
 
   render() {
@@ -57,27 +59,66 @@ export default class Board extends Component {
         <MyLine points={[400, 0, 400, 500]} color="black" />
         <MyLine points={[500, 0, 500, 500]} color="black" />
 
-        {Object.keys(game1).map(color => {
+        {Object.keys(game1).map((color, idx) => {
           const points = game1[color];
 
           return (
-            <Group>
+            <Group key={idx}>
               <MyCircle x={points[0]} y={points[1]} color={color} />
               <MyCircle x={points[2]} y={points[3]} color={color} />
             </Group>
           );
         })}
 
-        {Object.keys(this.state.lines).map(color => {
+        {Object.keys(this.state.lines).map((color, idx) => {
           const points = this.state.lines[color];
           return (
             <MyLine
+              key={idx}
               points={points.map(p => p * CELL_SIZE + CELL_SIZE / 2)}
               color="red"
             />
           );
         })}
+
+        <Rect x={0} y={0} width={500} height={500} ref={r => this.bg = r} />
       </Group>
     );
+  }
+
+  componentDidMount() {
+    this.bg.on('mousedown', e => {
+      console.log('xxxxx')
+
+      const x = Math.floor(e.evt.x / CELL_SIZE);
+      const y = Math.floor(e.evt.y / CELL_SIZE);
+      //const color = getColor(fixed, x, y);
+      const color = 'red';
+
+      this.state.lines[color] = [];
+      this.setState({selectedColor: color, lines: this.state.lines});
+    });
+
+    this.bg.on('mouseup', e => {
+      this.setState({selectedColor: undefined});
+    });
+
+    this.bg.on('mousemove', e => {
+      const color = this.state.selectedColor;
+      if (!color) {
+        return;
+      }
+
+      const x = Math.floor(e.evt.x / CELL_SIZE);
+      const y = Math.floor(e.evt.y / CELL_SIZE);
+
+      const points = this.state.lines[color];
+      const lastX = points[points.length - 2];
+      const lastY = points[points.length - 1];
+      if (lastX === undefined || x === lastX || y === lastY) {
+        points.push(x, y);
+        this.setState({lines: this.state.lines});
+      }
+    });
   }
 };
