@@ -47,6 +47,24 @@ const getFixedColor = (fixed, x, y) => {
   return undefined;
 };
 
+const rollBack = (lines, selectedColor, x, y) => {
+  let selfRolledBack = false;
+
+  const colors = Object.keys(lines);
+  colors.forEach(color => {
+    const points = lines[color];
+    const idx = getPointIdx(points, x, y);
+
+    if (idx >= 0) {
+      const sliceIdx = color === selectedColor ? idx + 2 : idx;
+      lines[color] = points.slice(0, sliceIdx);
+      selfRolledBack = color === selectedColor;
+    }
+  });
+
+  return selfRolledBack;
+};
+
 export default class Board extends Component {
   constructor(props) {
     super(props);
@@ -153,9 +171,7 @@ export default class Board extends Component {
       const points = lines[selectedColor];
 
       // Roll back uncomplete route
-      const idx = getPointIdx(points, x, y);
-      if (idx >= 0) {
-        lines[selectedColor] = points.slice(0, idx + 2);
+      if (rollBack(lines, selectedColor, x, y)) {
         this.setState({lines});
         return;
       }
