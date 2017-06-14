@@ -27,15 +27,25 @@ const MyCircle = ({cellSize, x, y, color}) => {
   );
 };
 
+const getFixedColor = (fixed, x, y) => {
+  const colors = Object.keys(fixed);
+  for (const color of colors) {
+    const points = fixed[color];
+    if ((points[0] === x && points[1] === y) ||
+        (points[2] === x && points[3] === y)) {
+      return color;
+    }
+  }
+  return undefined;
+};
+
 export default class Board extends Component {
   constructor(props) {
     super(props);
     this.state = {
       size: game1.size,
-      fixed: game1.colors,
-      lines: {
-        red: [0, 0, 0, 1, 1, 1]
-      },
+      fixed: game1.fixed,
+      lines: {},
       selectedColor: undefined
     }
     this.bg = undefined;
@@ -48,14 +58,14 @@ export default class Board extends Component {
     return (
       <Group>
         {array.map(idx =>
-          <MyLine
+          <MyLine key={idx}
             points={[0, idx * cellSize, this.props.windowSize, idx * cellSize]}
             color="black"
           />
         )}
 
         {array.map(idx =>
-          <MyLine
+          <MyLine key={idx}
             points={[idx * cellSize, 0, idx * cellSize, this.props.windowSize]}
             color="black"
           />
@@ -78,12 +88,16 @@ export default class Board extends Component {
             <MyLine
               key={idx}
               points={points.map(p => p * cellSize + cellSize / 2)}
-              color="red"
+              color={color}
             />
           );
         })}
 
-        <Rect x={0} y={0} width={500} height={500} ref={r => this.bg = r} />
+        <Rect
+          x={0} y={0}
+          width={this.props.windowSize} height={this.props.windowSize}
+          ref={r => this.bg = r}
+        />
       </Group>
     );
   }
@@ -92,15 +106,14 @@ export default class Board extends Component {
     const cellSize = this.props.windowSize / this.state.size;
 
     this.bg.on('mousedown', e => {
-      console.log('xxxxx')
-
       const x = Math.floor(e.evt.x / cellSize);
       const y = Math.floor(e.evt.y / cellSize);
-      //const color = getColor(fixed, x, y);
-      const color = 'red';
-
-      this.state.lines[color] = [];
-      this.setState({selectedColor: color, lines: this.state.lines});
+      const color = getFixedColor(this.state.fixed, x, y);
+      if (color) {
+        const lines = this.state.lines;
+        delete lines[color];
+        this.setState({selectedColor: color, lines});
+      }
     });
 
     this.bg.on('mouseup', e => {
@@ -116,12 +129,17 @@ export default class Board extends Component {
       const x = Math.floor(e.evt.x / cellSize);
       const y = Math.floor(e.evt.y / cellSize);
 
-      const points = this.state.lines[color];
+      const lines = this.state.lines;
+      if (!lines[color]) {
+        lines[color] = [];
+      }
+
+      const points = lines[color];
       const lastX = points[points.length - 2];
       const lastY = points[points.length - 1];
       if (lastX === undefined || x === lastX || y === lastY) {
         points.push(x, y);
-        this.setState({lines: this.state.lines});
+        this.setState({lines});
       }
     });
   }
