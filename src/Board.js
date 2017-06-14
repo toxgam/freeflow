@@ -27,12 +27,20 @@ const MyCircle = ({cellSize, x, y, color}) => {
   );
 };
 
+const getPointIdx = (points, x, y) => {
+  for (let idx = 0; idx < points.length; idx += 2) {
+    if (points[idx] === x && points[idx + 1] === y) {
+      return idx;
+    }
+  }
+  return -1;
+};
+
 const getFixedColor = (fixed, x, y) => {
   const colors = Object.keys(fixed);
   for (const color of colors) {
     const points = fixed[color];
-    if ((points[0] === x && points[1] === y) ||
-        (points[2] === x && points[3] === y)) {
+    if (getPointIdx(points, x, y) >= 0) {
       return color;
     }
   }
@@ -128,18 +136,31 @@ export default class Board extends Component {
 
       const x = Math.floor(e.evt.x / cellSize);
       const y = Math.floor(e.evt.y / cellSize);
+
+      // Stop at fixed point
       const color = getFixedColor(this.state.fixed, x, y);
       if (color !== undefined && color !== selectedColor) {
         this.setState({selectedColor: undefined});
         return;
       }
 
+      // Initialize
       const lines = this.state.lines;
       if (!lines[selectedColor]) {
         lines[selectedColor] = [];
       }
 
       const points = lines[selectedColor];
+
+      // Roll back uncomplete route
+      const idx = getPointIdx(points, x, y);
+      if (idx >= 0) {
+        lines[selectedColor] = points.slice(0, idx + 2);
+        this.setState({lines});
+        return;
+      }
+
+      // Add points
       const lastX = points[points.length - 2];
       const lastY = points[points.length - 1];
       if (lastX === undefined || x === lastX || y === lastY) {
