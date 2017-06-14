@@ -3,12 +3,12 @@ import {Circle, Group, Line, Rect} from 'react-konva';
 
 import {game1} from './data';
 
-const MyLine = ({points, color}) => {
+const MyLine = ({points, color, width}) => {
   return (
     <Line
       points={points}
       stroke={color}
-      strokeWidth={5}
+      strokeWidth={width}
       lineCap="round"
       lineJoin="round"
     />
@@ -126,6 +126,7 @@ export default class Board extends Component {
           <MyLine key={idx}
             points={[0, idx * cellSize, this.props.windowSize, idx * cellSize]}
             color="black"
+            width={5}
           />
         )}
 
@@ -133,6 +134,7 @@ export default class Board extends Component {
           <MyLine key={idx}
             points={[idx * cellSize, 0, idx * cellSize, this.props.windowSize]}
             color="black"
+            width={5}
           />
         )}
 
@@ -154,6 +156,7 @@ export default class Board extends Component {
               key={idx}
               points={points.map(p => p * cellSize + cellSize / 2)}
               color={color}
+              width={20}
             />
           );
         })}
