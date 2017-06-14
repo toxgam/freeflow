@@ -134,11 +134,25 @@ export default class Board extends Component {
     this.bg.on('mousedown', e => {
       const x = Math.floor(e.evt.x / cellSize);
       const y = Math.floor(e.evt.y / cellSize);
-      const color = getFixedColor(this.state.fixed, x, y);
-      if (color) {
-        const lines = this.state.lines;
-        delete lines[color];
-        this.setState({selectedColor: color, lines});
+
+      const lines = this.state.lines;
+      const fixedColor = getFixedColor(this.state.fixed, x, y);
+
+      if (fixedColor) {
+        delete lines[fixedColor];
+        this.setState({selectedColor: fixedColor, lines});
+      } else {
+        const colors = Object.keys(lines);
+        for (let i = 0; i < colors.length; i++) {
+          const color = colors[i];
+          const points = lines[color];
+          const idx = getPointIdx(points, x, y);
+          if (idx >= 0) {
+            lines[color] = points.slice(0, idx + 2);
+            this.setState({selectedColor: color, lines});
+            return;
+          }
+        }
       }
     });
 
