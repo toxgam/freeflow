@@ -184,7 +184,9 @@ export default class Board extends Component {
     // Add points
     const lastX = points[points.length - 2]
     const lastY = points[points.length - 1]
-    if (lastX === undefined || x === lastX || y === lastY) {
+    const lastColor = getFixedColor(this.state.fixed, lastX, lastY)
+    if ((lastX === undefined || x === lastX || y === lastY) &&
+        (color || !lastColor || points.length <= 2)) {
       points.push(x, y)
       this.setState({lines})
     }
