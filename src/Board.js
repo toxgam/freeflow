@@ -109,7 +109,7 @@ export default class Board extends Component {
   static route = <Route exact path="/levels/:id" component={Board} />
 
   state = {
-    windowSize: window.innerWidth,
+    windowSize: Math.min(window.innerWidth, window.innerHeight),
     size: game1.size,
     fixed: game1.fixed,
     lines: {},
@@ -257,7 +257,7 @@ export default class Board extends Component {
 
   componentDidMount() {
     window.addEventListener('resize', () => {
-      this.setState({windowSize: window.innerWidth})
+      this.setState({windowSize: Math.min(window.innerWidth, window.innerHeight)})
     })
   }
 }
