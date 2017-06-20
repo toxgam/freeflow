@@ -2,7 +2,7 @@ import React, {Component} from 'react'
 import {Route} from 'react-router-dom'
 import {Circle, Group, Layer, Line, Rect, Stage} from 'react-konva'
 
-import {game1} from './data'
+import {game} from './data'
 
 const MyLine = ({points, color, width}) => {
   return (
@@ -106,15 +106,18 @@ const areAllFilled = (size, lines) => {
 }
 
 export default class Board extends Component {
-  static route = <Route exact path="/levels/:id" component={Board} />
-
-  state = {
-    windowSize: Math.min(window.innerWidth, window.innerHeight),
-    size: game1.size,
-    fixed: game1.fixed,
-    lines: {},
-    selectedColor: undefined
+  constructor(props) {
+    super(props)
+    this.state = {
+      windowSize: Math.min(window.innerWidth, window.innerHeight),
+      size: game[props.match.params.id - 1].size,
+      fixed: game[props.match.params.id - 1].fixed,
+      lines: {},
+      selectedColor: undefined
+    }
   }
+
+  static route = <Route exact path="/levels/:id" component={Board} />
 
   bg = undefined
 
