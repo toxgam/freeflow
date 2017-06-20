@@ -1,14 +1,14 @@
-import React, {Component} from 'react';
-import {Layer, Stage} from 'react-konva';
+import React, {Component} from 'react'
+import {Layer, Stage} from 'react-konva'
 
-import Board from './Board';
+import Board from './Board'
 
 export default class App extends Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       windowSize: window.innerWidth
-    };
+    }
   }
 
   render() {
@@ -18,12 +18,12 @@ export default class App extends Component {
           <Board windowSize={this.state.windowSize} />
         </Layer>
       </Stage>
-    );
+    )
   }
 
   componentDidMount() {
     window.addEventListener('resize', () => {
-      this.setState({windowSize: window.innerWidth});
-    });
+      this.setState({windowSize: window.innerWidth})
+    })
   }
 };

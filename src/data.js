@@ -7,4 +7,4 @@ export const game1 = {
     yellow: [4, 0, 3, 3],
     orange: [4, 1, 3, 4]
   }
-};
+}
