@@ -3,3 +3,20 @@ body {
   padding: 0;
   font-family: sans-serif;
 }
+
+a {
+  text-decoration: none;
+}
+
+.level {
+  border: 1px solid black;
+  width: 40px;
+  height: 40px;
+  margin: 10px;
+  padding: 10px;
+  text-align: center;
+  line-height: 40px;
+  vertical-align: middle;
+  font-size: 40px;
+  float: left;
+}

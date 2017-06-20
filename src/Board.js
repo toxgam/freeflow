@@ -1,5 +1,6 @@
 import React, {Component} from 'react'
-import {Circle, Group, Line, Rect} from 'react-konva'
+import {Route} from 'react-router-dom'
+import {Circle, Group, Layer, Line, Rect, Stage} from 'react-konva'
 
 import {game1} from './data'
 
@@ -105,7 +106,10 @@ const areAllFilled = (size, lines) => {
 }
 
 export default class Board extends Component {
+  static route = <Route exact path="/levels/:id" component={Board} />
+
   state = {
+    windowSize: window.innerWidth,
     size: game1.size,
     fixed: game1.fixed,
     lines: {},
@@ -115,7 +119,7 @@ export default class Board extends Component {
   bg = undefined
 
   onMouseDown = (e) => {
-    const cellSize = this.props.windowSize / this.state.size
+    const cellSize = this.state.windowSize / this.state.size
 
     const x = Math.floor(e.evt.x / cellSize)
     const y = Math.floor(e.evt.y / cellSize)
@@ -146,7 +150,7 @@ export default class Board extends Component {
   }
 
   onMouseMove = (e) => {
-    const cellSize = this.props.windowSize / this.state.size
+    const cellSize = this.state.windowSize / this.state.size
 
     const selectedColor = this.state.selectedColor
     if (!selectedColor) {
@@ -192,58 +196,68 @@ export default class Board extends Component {
   }
 
   render() {
-    const cellSize = this.props.windowSize / this.state.size
+    const cellSize = this.state.windowSize / this.state.size
     const array = [...Array(this.state.size + 1).keys()]
 
     return (
-      <Group>
-        {array.map(idx =>
-          <MyLine key={idx}
-            points={[0, idx * cellSize, this.props.windowSize, idx * cellSize]}
-            color="black"
-            width={5}
-          />
-        )}
-
-        {array.map(idx =>
-          <MyLine key={idx}
-            points={[idx * cellSize, 0, idx * cellSize, this.props.windowSize]}
-            color="black"
-            width={5}
-          />
-        )}
-
-        {Object.keys(this.state.fixed).map((color, idx) => {
-          const points = this.state.fixed[color]
-
-          return (
-            <Group key={idx}>
-              <MyCircle cellSize={cellSize} x={points[0]} y={points[1]} color={color} />
-              <MyCircle cellSize={cellSize} x={points[2]} y={points[3]} color={color} />
-            </Group>
-          )
-        })}
-
-        {Object.keys(this.state.lines).map((color, idx) => {
-          const points = this.state.lines[color]
-          return (
-            <MyLine
-              key={idx}
-              points={points.map(p => p * cellSize + cellSize / 2)}
-              color={color}
-              width={20}
+      <Stage width={this.state.windowSize} height={this.state.windowSize}>
+        <Layer>
+          {array.map(idx =>
+            <MyLine key={idx}
+              points={[0, idx * cellSize, this.state.windowSize, idx * cellSize]}
+              color="black"
+              width={5}
             />
-          )
-        })}
+          )}
 
-        <Rect
-          x={0} y={0}
-          width={this.props.windowSize} height={this.props.windowSize}
-          onMouseDown={this.onMouseDown}
-          onMouseUp={this.onMouseUp}
-          onMouseMove={this.onMouseMove}
-        />
-      </Group>
+          {array.map(idx =>
+            <MyLine key={idx}
+              points={[idx * cellSize, 0, idx * cellSize, this.state.windowSize]}
+              color="black"
+              width={5}
+            />
+          )}
+
+          {Object.keys(this.state.fixed).map((color, idx) => {
+            const points = this.state.fixed[color]
+
+            return (
+              <Group key={idx}>
+                <MyCircle cellSize={cellSize} x={points[0]} y={points[1]} color={color} />
+                <MyCircle cellSize={cellSize} x={points[2]} y={points[3]} color={color} />
+              </Group>
+            )
+          })}
+
+          {Object.keys(this.state.lines).map((color, idx) => {
+            const points = this.state.lines[color]
+            return (
+              <MyLine
+                key={idx}
+                points={points.map(p => p * cellSize + cellSize / 2)}
+                color={color}
+                width={20}
+              />
+            )
+          })}
+
+          <Rect
+            x={0}
+            y={0}
+            width={this.state.windowSize}
+            height={this.state.windowSize}
+            onMouseDown={this.onMouseDown}
+            onMouseUp={this.onMouseUp}
+            onMouseMove={this.onMouseMove}
+          />
+        </Layer>
+      </Stage>
     )
+  }
+
+  componentDidMount() {
+    window.addEventListener('resize', () => {
+      this.setState({windowSize: window.innerWidth})
+    })
   }
 }
