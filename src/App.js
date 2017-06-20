@@ -4,11 +4,8 @@ import {Layer, Stage} from 'react-konva'
 import Board from './Board'
 
 export default class App extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      windowSize: window.innerWidth
-    }
+  state = {
+    windowSize: window.innerWidth
   }
 
   render() {

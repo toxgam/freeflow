@@ -105,15 +105,90 @@ const areAllFilled = (size, lines) => {
 }
 
 export default class Board extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      size: game1.size,
-      fixed: game1.fixed,
-      lines: {},
-      selectedColor: undefined
+  state = {
+    size: game1.size,
+    fixed: game1.fixed,
+    lines: {},
+    selectedColor: undefined
+  }
+
+  bg = undefined
+
+  onMouseDown = (e) => {
+    const cellSize = this.props.windowSize / this.state.size
+
+    const x = Math.floor(e.evt.x / cellSize)
+    const y = Math.floor(e.evt.y / cellSize)
+
+    const lines = this.state.lines
+    const fixedColor = getFixedColor(this.state.fixed, x, y)
+
+    if (fixedColor) {
+      delete lines[fixedColor]
+      this.setState({selectedColor: fixedColor, lines})
+    } else {
+      const colors = Object.keys(lines)
+      for (let i = 0; i < colors.length; i++) {
+        const color = colors[i]
+        const points = lines[color]
+        const idx = getPointIdx(points, x, y)
+        if (idx >= 0) {
+          lines[color] = points.slice(0, idx + 2)
+          this.setState({selectedColor: color, lines})
+          return
+        }
+      }
     }
-    this.bg = undefined
+  }
+
+  onMouseUp = (e) => {
+    this.setState({selectedColor: undefined})
+  }
+
+  onMouseMove = (e) => {
+    const cellSize = this.props.windowSize / this.state.size
+
+    const selectedColor = this.state.selectedColor
+    if (!selectedColor) {
+      return
+    }
+
+    const x = Math.floor(e.evt.x / cellSize)
+    const y = Math.floor(e.evt.y / cellSize)
+
+    // Stop at fixed point
+    const color = getFixedColor(this.state.fixed, x, y)
+    if (color !== undefined && color !== selectedColor) {
+      this.setState({selectedColor: undefined})
+      return
+    }
+
+    // Initialize
+    const lines = this.state.lines
+    if (!lines[selectedColor]) {
+      lines[selectedColor] = []
+    }
+
+    const points = lines[selectedColor]
+
+    // Roll back uncomplete route
+    if (rollBack(lines, selectedColor, x, y)) {
+      this.setState({lines})
+      return
+    }
+
+    // Add points
+    const lastX = points[points.length - 2]
+    const lastY = points[points.length - 1]
+    if (lastX === undefined || x === lastX || y === lastY) {
+      points.push(x, y)
+      this.setState({lines})
+    }
+
+    if (isConnected(this.state.fixed, this.state.lines) &&
+        areAllFilled(this.state.size, this.state.lines)) {
+      console.log('Done')
+    }
   }
 
   render() {
@@ -164,92 +239,11 @@ export default class Board extends Component {
         <Rect
           x={0} y={0}
           width={this.props.windowSize} height={this.props.windowSize}
-          ref={r => this.bg = r}
+          onMouseDown={this.onMouseDown}
+          onMouseUp={this.onMouseUp}
+          onMouseMove={this.onMouseMove}
         />
       </Group>
     )
-  }
-
-  componentDidMount() {
-    this.bg.on('mousedown', this.onMouseDown.bind(this))
-    this.bg.on('mouseup',   this.onMouseUp.bind(this))
-    this.bg.on('mousemove', this.onMouseMove.bind(this))
-  }
-
-  onMouseDown(e) {
-    const cellSize = this.props.windowSize / this.state.size
-
-    const x = Math.floor(e.evt.x / cellSize)
-    const y = Math.floor(e.evt.y / cellSize)
-
-    const lines = this.state.lines
-    const fixedColor = getFixedColor(this.state.fixed, x, y)
-
-    if (fixedColor) {
-      delete lines[fixedColor]
-      this.setState({selectedColor: fixedColor, lines})
-    } else {
-      const colors = Object.keys(lines)
-      for (let i = 0; i < colors.length; i++) {
-        const color = colors[i]
-        const points = lines[color]
-        const idx = getPointIdx(points, x, y)
-        if (idx >= 0) {
-          lines[color] = points.slice(0, idx + 2)
-          this.setState({selectedColor: color, lines})
-          return
-        }
-      }
-    }
-  }
-
-  onMouseUp(e) {
-    this.setState({selectedColor: undefined})
-  }
-
-  onMouseMove(e) {
-    const cellSize = this.props.windowSize / this.state.size
-
-    const selectedColor = this.state.selectedColor
-    if (!selectedColor) {
-      return
-    }
-
-    const x = Math.floor(e.evt.x / cellSize)
-    const y = Math.floor(e.evt.y / cellSize)
-
-    // Stop at fixed point
-    const color = getFixedColor(this.state.fixed, x, y)
-    if (color !== undefined && color !== selectedColor) {
-      this.setState({selectedColor: undefined})
-      return
-    }
-
-    // Initialize
-    const lines = this.state.lines
-    if (!lines[selectedColor]) {
-      lines[selectedColor] = []
-    }
-
-    const points = lines[selectedColor]
-
-    // Roll back uncomplete route
-    if (rollBack(lines, selectedColor, x, y)) {
-      this.setState({lines})
-      return
-    }
-
-    // Add points
-    const lastX = points[points.length - 2]
-    const lastY = points[points.length - 1]
-    if (lastX === undefined || x === lastX || y === lastY) {
-      points.push(x, y)
-      this.setState({lines})
-    }
-
-    if (isConnected(this.state.fixed, this.state.lines) &&
-        areAllFilled(this.state.size, this.state.lines)) {
-      console.log('Done')
-    }
   }
 }
